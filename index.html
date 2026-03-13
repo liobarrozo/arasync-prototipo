@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AraSync - Prototipo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
+        .iphone-frame {
+            width: 375px; height: 812px;
+            border: 12px solid #1a1a1a; border-radius: 40px;
+            position: relative; background: #f8fafc;
+            overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
+        }
+        .progress-ring { transform: rotate(-90deg); transition: stroke-dashoffset 0.5s ease; }
+        .hidden-step { display: none; }
+        .fade-in { animation: fadeIn 0.4s ease-in; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-4">
+
+    <div class="iphone-frame flex flex-col">
+        
+        <div class="p-6 pb-2 text-center shrink-0">
+            <h1 class="text-xl font-bold text-slate-800 tracking-tight">
+                ARA<span class="text-emerald-400 italic">SYNC</span>
+            </h1>
+            <div class="mt-4 inline-flex items-center bg-sky-500 rounded-full px-4 py-1 text-white font-bold text-sm">
+                MODO ACTIVO: <span class="bg-emerald-400 ml-2 px-3 py-0.5 rounded-full uppercase">Aramendi</span>
+            </div>
+            <div class="flex items-center justify-center mt-4 text-sm font-semibold text-slate-700">
+                <span class="mr-2 text-xl">🏫</span>
+                Check-in: <span class="ml-1 text-slate-900">Escuela Nacional, 5° Sec.</span>
+            </div>
+        </div>
+
+        <div class="flex-1 px-6 mt-4 relative">
+            
+            <div id="form-container" class="bg-white p-5 rounded-3xl shadow-sm border border-slate-100 fade-in">
+                <h2 class="text-center font-bold text-slate-800 mb-4 uppercase text-[12px] tracking-wide">Registrar Nuevo Contacto</h2>
+                <div class="space-y-3">
+                    <div class="relative"><i data-lucide="user" class="absolute left-3 top-2.5 text-slate-400 w-5 h-5"></i><input type="text" placeholder="Nombre del Padre" class="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-xl focus:outline-none"></div>
+                    <div class="relative"><i data-lucide="phone" class="absolute left-3 top-2.5 text-slate-400 w-5 h-5"></i><input type="text" placeholder="Teléfono WhatsApp" class="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-xl focus:outline-none"></div>
+                    <div class="relative"><i data-lucide="school" class="absolute left-3 top-2.5 text-slate-400 w-5 h-5"></i><input type="text" placeholder="Colegio" class="w-full pl-10 pr-10 py-2 border border-slate-200 rounded-xl focus:outline-none"><i data-lucide="search" class="absolute right-3 top-2.5 text-slate-400 w-5 h-5"></i></div>
+                </div>
+                <button onclick="enviarContacto()" class="w-full mt-6 bg-sky-600 hover:bg-sky-700 text-white font-bold py-3 rounded-2xl flex items-center justify-center shadow-lg transition-all active:scale-95">
+                    AGREGAR CONTACTO <i data-lucide="plus" class="ml-2 w-5 h-5"></i>
+                </button>
+            </div>
+
+            <div id="loader-container" class="hidden-step bg-white p-8 rounded-3xl shadow-sm border border-slate-100 text-center fade-in">
+                <div class="flex flex-col items-center space-y-6">
+                    <div id="step-1" class="flex items-center text-slate-400 font-bold transition-colors duration-500">
+                        <div class="loader-spinner mr-3 w-5 h-5 border-2 border-sky-600 border-t-transparent rounded-full animate-spin"></div>
+                        <i data-lucide="check-circle-2" class="hidden w-6 h-6 text-emerald-500 mr-3"></i>
+                        <span>Enviando ubicación...</span>
+                    </div>
+                    <div id="step-2" class="flex items-center text-slate-300 font-bold transition-colors duration-500">
+                        <div class="loader-spinner mr-3 w-5 h-5 border-2 border-sky-600 border-t-transparent rounded-full animate-spin invisible"></div>
+                        <i data-lucide="check-circle-2" class="hidden w-6 h-6 text-emerald-500 mr-3"></i>
+                        <span>Enviando contacto...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="p-6 shrink-0">
+            <h2 class="text-center font-bold text-slate-800 mb-4 uppercase text-sm tracking-wide">Mi Desempeño</h2>
+            <div class="grid grid-cols-2 gap-4">
+                <div class="bg-white p-4 rounded-3xl shadow-sm border border-slate-100 flex flex-col items-center">
+                    <span class="text-[10px] font-bold text-slate-800 text-center mb-2 leading-tight">METAS DIARIAS</span>
+                    <div class="relative flex items-center justify-center">
+                        <svg class="progress-ring" width="80" height="80">
+                            <circle class="text-slate-100" stroke-width="8" stroke="currentColor" fill="transparent" r="30" cx="40" cy="40"/>
+                            <circle id="circle-progress" class="text-emerald-400" stroke-width="8" stroke-dasharray="188.4" stroke-dashoffset="126" stroke-linecap="round" stroke="currentColor" fill="transparent" r="30" cx="40" cy="40"/>
+                        </svg>
+                        <span id="percent-text" class="absolute text-xl font-bold">33%</span>
+                    </div>
+                    <div class="text-center mt-2 text-[11px] font-bold">
+                        <span id="contacts-count" class="text-lg">5</span> / 15 <br> <span class="text-slate-500">Registrados Hoy</span>
+                    </div>
+                </div>
+                <div class="space-y-4">
+                    <div class="bg-white p-3 rounded-3xl shadow-sm border border-slate-100">
+                        <span class="text-[10px] font-bold text-slate-800 block uppercase">Semana</span>
+                        <div class="flex justify-between items-end">
+                            <span id="weekly-total" class="text-2xl font-bold">25</span>
+                            <span class="text-2xl">🏫</span>
+                        </div>
+                    </div>
+                    <div class="bg-white p-3 rounded-3xl shadow-sm border border-slate-100">
+                        <span class="text-[10px] font-bold text-slate-800 block uppercase">Efectividad</span>
+                        <div class="flex justify-between items-end">
+                            <span class="text-2xl font-bold">5%</span>
+                            <span class="text-2xl">🤝</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        lucide.createIcons();
+
+        function enviarContacto() {
+            const form = document.getElementById('form-container');
+            const loader = document.getElementById('loader-container');
+            const s1 = document.getElementById('step-1');
+            const s2 = document.getElementById('step-2');
+
+            // 1. Mostrar Loader
+            form.classList.add('hidden-step');
+            loader.classList.remove('hidden-step');
+
+            // Paso 1: Ubicación
+            setTimeout(() => {
+                s1.querySelector('.loader-spinner').classList.add('hidden');
+                s1.querySelector('[data-lucide="check-circle-2"]').classList.remove('hidden');
+                s1.classList.replace('text-slate-400', 'text-emerald-500');
+                
+                // Paso 2: Contacto
+                s2.classList.replace('text-slate-300', 'text-slate-400');
+                s2.querySelector('.loader-spinner').classList.remove('invisible');
+
+                setTimeout(() => {
+                    s2.querySelector('.loader-spinner').classList.add('hidden');
+                    s2.querySelector('[data-lucide="check-circle-2"]').classList.remove('hidden');
+                    s2.classList.replace('text-slate-400', 'text-emerald-500');
+                    
+                    // Finalizar y actualizar stats
+                    setTimeout(actualizarStats, 800);
+                }, 1500);
+            }, 1200);
+        }
+
+        function actualizarStats() {
+            // Actualizar números
+            const current = 6; // De 5 sube a 6
+            document.getElementById('contacts-count').innerText = current;
+            document.getElementById('weekly-total').innerText = 26;
+            
+            // Actualizar Porcentaje (6/15 = 40%)
+            const percent = Math.round((current / 15) * 100);
+            document.getElementById('percent-text').innerText = percent + "%";
+            
+            // Animación del círculo (Perímetro = 188.4)
+            const offset = 188.4 - (percent / 100 * 188.4);
+            document.getElementById('circle-progress').style.strokeDashoffset = offset;
+
+            // Volver al formulario
+            setTimeout(() => {
+                document.getElementById('loader-container').classList.add('hidden-step');
+                document.getElementById('form-container').classList.remove('hidden-step');
+                // Reset de los pasos para la próxima vez
+                location.reload(); // Solo para demo, o resetear clases manualmente
+            }, 1500);
+        }
+    </script>
+</body>
+</html>
