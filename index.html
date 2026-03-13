@@ -3,178 +3,683 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AraSync - Prototipo</title>
+    <title>AraSync - Gestión Comercial</title>
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            sky: '#0ea5e9', // sky-500
+                            skyDark: '#0284c7', // sky-600
+                            emerald: '#10b981', // emerald-500
+                            emeraldLight: '#34d399', // emerald-400
+                            slate: '#f8fafc', // slate-50
+                            darkSlate: '#334155' // slate-700
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <!-- Toastify CSS -->
     <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
-    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
-    
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
-        body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; margin: 0; }
-        
-        /* Contenedor iPhone */
-        .iphone-frame {
-            width: 375px; height: 812px;
-            border: 12px solid #1a1a1a; border-radius: 40px;
-            background: #f8fafc; position: relative;
-            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
-            margin: 20px auto;
-            display: flex; flex-direction: column;
-            overflow: hidden;
-        }
-
-        /* LÓGICA DE GIRO FORZADO PARA MOBILE */
-        .panel-mode-mobile {
-            position: fixed !important;
-            top: 50% !important; left: 50% !important;
-            width: 100vh !important; height: 100vw !important;
-            transform: translate(-50%, -50%) rotate(90deg) !important;
-            margin: 0 !important; border: none !important; border-radius: 0 !important;
-            z-index: 999;
-        }
-
-        .kanban-column { min-width: 280px; background: #f1f5f9; border-radius: 12px; height: calc(100% - 20px); }
-        .hide-element { display: none !important; }
-    </style>
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="styles.css">
 </head>
-<body class="flex items-center justify-center min-h-screen">
+<body class="bg-gray-100 font-sans text-gray-800 overflow-x-hidden antialiased min-h-screen">
 
-    <div id="app-container" class="iphone-frame">
-        
-        <div id="promotor-view" class="flex flex-col h-full">
-            <div class="p-6 text-center">
-                <h1 class="text-xl font-bold text-slate-800 uppercase italic">Aramendi & Araride <span class="text-emerald-400">Sync</span></h1>
-                <div class="mt-4 inline-flex items-center bg-sky-500 rounded-full px-4 py-1 text-white font-bold text-sm">
-                    MODO: <span class="bg-emerald-400 ml-2 px-3 py-0.5 rounded-full uppercase">Promotor</span>
+    <!-- View 1: Promoter (Mobile Style) -->
+    <div id="view1" class="transition-all duration-500 ease-in-out w-full min-h-screen flex justify-center items-center py-0 sm:py-8 bg-[#f4f7f9] relative z-10">
+        <!-- Phone Frame Container (Desktop only) -->
+        <div id="phone-frame" class="w-full h-full sm:w-[420px] sm:h-[880px] sm:border-[14px] sm:border-gray-900 sm:rounded-[40px] bg-[#f4f7f9] relative overflow-hidden shadow-2xl flex flex-col">
+            
+            <!-- Dynamic Island / Notch Fake -->
+            <div class="hidden sm:block absolute top-0 inset-x-0 h-6 bg-gray-900 rounded-b-xl w-40 mx-auto z-50"></div>
+
+            <!-- Header -->
+            <header class="pt-12 pb-4 px-6 text-center z-10">
+                <h1 class="text-xl font-bold text-[#1e3a5f] tracking-tight">ARA<span class="text-brand-emerald">SYNC</span></h1>
+                <div class="mt-3 inline-flex items-center bg-brand-sky text-white px-5 py-1.5 rounded-full text-sm font-bold shadow-sm uppercase tracking-wide">
+                    MODO ACTIVO: ARAMENDI
                 </div>
-            </div>
-
-            <div class="flex-1 px-6">
-                <div id="form-container" class="bg-white p-5 rounded-3xl shadow-sm border border-slate-100">
-                    <h2 class="text-center font-bold text-slate-800 mb-4 uppercase text-[12px]">Nuevo Contacto</h2>
-                    <div class="space-y-3">
-                        <input type="text" id="input-nombre" placeholder="Nombre del Padre" class="w-full px-4 py-2 border rounded-xl outline-none">
-                        <input type="text" placeholder="WhatsApp" class="w-full px-4 py-2 border rounded-xl outline-none">
-                        <input type="text" placeholder="Colegio" class="w-full px-4 py-2 border rounded-xl outline-none">
-                        <select class="w-full px-4 py-2 border rounded-xl bg-white outline-none">
-                            <option>5° Secundaria</option>
-                            <option>4° Secundaria</option>
-                        </select>
-                    </div>
-                    <button onclick="enviarContacto()" class="w-full mt-6 bg-sky-600 text-white font-bold py-3 rounded-2xl shadow-lg active:scale-95 transition-transform">
-                        AGREGAR CONTACTO +
-                    </button>
-                </div>
-
-                <div id="loader-container" class="hide-element bg-white p-8 rounded-3xl shadow-sm border border-slate-100 text-center mt-4">
-                    <div class="flex flex-col items-center space-y-4">
-                        <div class="w-8 h-8 border-4 border-sky-600 border-t-transparent rounded-full animate-spin"></div>
-                        <p id="loader-text" class="font-bold text-slate-600">Sincronizando...</p>
-                    </div>
-                </div>
-            </div>
-
-            <div class="p-6 bg-white border-t rounded-t-[40px]">
-                <div class="flex justify-around text-center">
-                    <div><p class="text-[10px] font-bold text-slate-400">HOY</p><p id="count-hoy" class="text-xl font-bold">5</p></div>
-                    <div><p class="text-[10px] font-bold text-slate-400">SEMANA</p><p id="count-semana" class="text-xl font-bold">25</p></div>
-                </div>
-            </div>
-        </div>
-
-        <div id="vendedor-view" class="hide-element flex flex-col h-full bg-slate-200">
-            <header class="bg-[#1e293b] text-white p-4 flex justify-between items-center shrink-0">
-                <h2 class="font-bold text-[10px] tracking-tight uppercase">Panel del Vendedor</h2>
-                <div class="text-[9px] bg-emerald-500/20 text-emerald-400 px-2 py-1 rounded border border-emerald-500/30">WhatsApp Conectado</div>
             </header>
 
-            <div id="kanban-board" class="flex flex-1 p-4 gap-4 overflow-x-auto">
+            <!-- Scrollable Content -->
+            <main class="flex-1 overflow-y-auto px-5 pb-8 custom-scrollbar">
+                
+                <!-- Check-in -->
+                <div class="flex items-center justify-center gap-2 mt-4 mb-6 text-slate-700 font-medium text-sm">
+                    <span class="text-xl">🏫</span>
+                    <span>Check-in: <strong class="text-slate-900">Escuela Nacional, 5° Sec.</strong></span>
                 </div>
+
+                <!-- Form Card -->
+                <div class="bg-white rounded-[24px] p-6 shadow-sm border border-gray-100 mb-6 relative">
+                    <h2 class="text-center font-bold text-slate-800 mb-5 text-[15px]">REGISTRAR NUEVO CONTACTO</h2>
+                    
+                    <form id="contactForm" class="space-y-3 relative z-10 transition-all duration-300">
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                                <i data-lucide="user" class="w-5 h-5 text-gray-400"></i>
+                            </div>
+                            <input type="text" id="contactName" required placeholder="Nombre del Padre" class="w-full pl-11 pr-4 py-3.5 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-sky focus:border-brand-sky outline-none transition-all text-slate-700 placeholder-gray-400 text-sm font-medium">
+                        </div>
+                        
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                                <i data-lucide="phone" class="w-5 h-5 text-gray-400"></i>
+                            </div>
+                            <input type="tel" id="contactPhone" placeholder="Teléfono WhatsApp" class="w-full pl-11 pr-4 py-3.5 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-sky focus:border-brand-sky outline-none transition-all text-slate-700 placeholder-gray-400 text-sm font-medium">
+                        </div>
+
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                                <i data-lucide="building-2" class="w-5 h-5 text-gray-400"></i>
+                            </div>
+                            <input type="text" id="contactSchool" placeholder="Colegio" class="w-full pl-11 pr-10 py-3.5 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-sky focus:border-brand-sky outline-none transition-all text-slate-700 placeholder-gray-400 text-sm font-medium">
+                            <div class="absolute inset-y-0 right-0 pr-3.5 flex items-center pointer-events-none">
+                                <i data-lucide="search" class="w-4 h-4 text-gray-400"></i>
+                            </div>
+                        </div>
+
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                                <i data-lucide="calendar" class="w-5 h-5 text-gray-400"></i>
+                            </div>
+                            <select id="contactGrade" class="w-full pl-11 pr-10 py-3.5 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-sky focus:border-brand-sky outline-none transition-all text-slate-700 appearance-none text-sm font-medium">
+                                <option value="" disabled selected>Grado</option>
+                                <option value="5° Secundaria">5° Primaria</option>
+                                <option value="4° Secundaria">6° Primaria</option>
+                            </select>
+                            <div class="absolute inset-y-0 right-0 pr-3.5 flex items-center pointer-events-none">
+                                <i data-lucide="chevron-down" class="w-4 h-4 text-gray-400"></i>
+                            </div>
+                        </div>
+
+                        <button type="submit" id="submitBtn" class="w-full mt-6 bg-[#2585c5] hover:bg-[#1e6eabc] text-white font-bold py-4 rounded-xl shadow-md transition-all flex justify-between items-center px-6 active:scale-[0.98]">
+                            <span class="flex-1 text-center font-bold text-[15px]">AGREGAR CONTACTO</span>
+                            <i data-lucide="plus" class="w-5 h-5"></i>
+                        </button>
+                    </form>
+
+                    <!-- Loader (Hidden by default) -->
+                    <div id="loaderArea" class="hidden absolute inset-0 bg-white rounded-[24px] flex-col items-center justify-center p-6 z-20">
+                        <div class="flex items-center gap-3 w-full mb-4">
+                            <div id="loaderSpinner1" class="w-5 h-5 border-2 border-slate-200 border-t-brand-sky rounded-full animate-spin shrink-0"></div>
+                            <i data-lucide="check-circle" id="checkIcon1" class="w-5 h-5 text-brand-emerald hidden shrink-0"></i>
+                            <p id="loaderText1" class="text-slate-600 font-bold text-sm">Enviando ubicación...</p>
+                        </div>
+                        <div class="flex items-center gap-3 w-full">
+                            <div id="loaderSpinner2" class="w-5 h-5 border-2 border-slate-200 border-t-brand-sky rounded-full animate-spin shrink-0 invisible"></div>
+                            <i data-lucide="check-circle" id="checkIcon2" class="w-5 h-5 text-brand-emerald hidden shrink-0"></i>
+                            <p id="loaderText2" class="text-slate-400 font-bold text-sm transition-colors">Enviando contacto...</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Performance section -->
+                <h3 class="text-center font-bold text-slate-800 mt-8 mb-4">MI DESEMPEÑO</h3>
+                
+                <div class="grid grid-cols-2 gap-3">
+                    <!-- Pie Chart Card -->
+                    <div class="bg-white rounded-[20px] p-5 shadow-sm border border-gray-100 flex flex-col items-center justify-center row-span-2 relative overflow-hidden">
+                        <h4 class="text-[11px] font-bold text-slate-800 mb-4 text-center tracking-wide">METAS DIARIAS</h4>
+                        
+                        <div class="relative w-28 h-28 mb-4">
+                            <svg class="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
+                                <path class="text-slate-100" stroke-width="4" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                                <path id="progressCircle" class="text-brand-emerald transition-all duration-1000 ease-out" stroke-dasharray="33.3, 100" stroke-width="4" stroke-linecap="round" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                            </svg>
+                            <div class="absolute inset-0 flex items-center justify-center">
+                                <span id="progressText" class="text-2xl font-bold text-slate-800 tracking-tight">33%</span>
+                            </div>
+                        </div>
+
+                        <div class="text-center mt-1">
+                            <p class="font-black text-slate-800 text-xl leading-tight"><span id="contactCount">5</span> <span class="text-slate-500 text-base font-semibold">/ 15</span></p>
+                            <p class="text-[11px] text-slate-600 font-medium leading-tight">Contactos<br>Registrados Hoy</p>
+                        </div>
+                        
+                        <div class="mt-4 bg-[#dcfce7] text-[#166534] text-[10px] font-bold py-2 px-3 rounded-xl text-center w-full">
+                            ¡Estás a <span id="remainingCount">10</span> de tu<br>objetivo diario!
+                        </div>
+                    </div>
+
+                    <!-- Stats Cards -->
+                    <div class="bg-white rounded-[20px] p-4 shadow-sm border border-gray-100 flex flex-col justify-center">
+                        <h4 class="text-[10px] font-bold text-slate-800 leading-tight mb-2 uppercase">Contactos Totales<br>(Semanales)</h4>
+                        <div class="flex items-center gap-2 mt-auto">
+                            <span id="weeklyCount" class="text-3xl font-black text-slate-800 leading-none">25</span>
+                            <span class="text-xl">🏫</span>
+                        </div>
+                        <p class="text-[10px] text-slate-500 mt-2 font-medium">Padres de Referencia</p>
+                    </div>
+
+                    <div class="bg-white rounded-[20px] p-4 shadow-sm border border-gray-100 flex flex-col justify-center">
+                        <h4 class="text-[10px] font-bold text-slate-800 leading-tight mb-2 uppercase">Efectividad</h4>
+                        <div class="flex items-center gap-2 mt-auto">
+                            <span class="text-3xl font-black text-slate-800 leading-none">5%</span>
+                            <span class="text-xl">🤝</span>
+                        </div>
+                        <p class="text-[10px] text-slate-500 mt-2 font-medium">Coordinaron Reunión</p>
+                    </div>
+                </div>
+                
+                <div class="h-8"></div>
+            </main>
         </div>
     </div>
 
-    <script>
-        // MOCKUP DATA
-        const mockData = {
-            nuevos: [
-                { nombre: "Juan García", colegio: "San José", grado: "5° Sec", marca: "Aramendi" },
-                { nombre: "Marta Gómez", colegio: "Nacional", grado: "5° Sec", marca: "Araride" },
-                { nombre: "Roberto Paz", colegio: "Industrial", grado: "4° Sec", marca: "Aramendi" }
-            ],
-            activos: [
-                { nombre: "Sofía López", colegio: "Santa María", grado: "5° Sec", marca: "Araride" }
-            ],
-            citas: [
-                { nombre: "Carlos Pérez", colegio: "Normal 1", grado: "5° Sec", marca: "Reunión Jueves" }
-            ]
-        };
-
-        function renderKanban() {
-            const board = document.getElementById('kanban-board');
-            board.innerHTML = '';
-
-            const columns = [
-                { title: "Nuevos Leads", key: "nuevos", color: "border-emerald-400" },
-                { title: "En Contacto", key: "activos", color: "border-sky-400" },
-                { title: "Citas", key: "citas", color: "border-amber-400" }
-            ];
-
-            columns.forEach(col => {
-                let cardsHtml = mockData[col.key].map(item => `
-                    <div class="bg-white p-3 rounded-xl shadow-sm border-l-4 ${col.color} mb-3 border border-slate-200">
-                        <p class="text-[11px] font-bold">${item.marca}: ${item.nombre}</p>
-                        <p class="text-[9px] text-slate-400 mb-2">${item.colegio}, ${item.grado}</p>
-                        <button class="w-full bg-sky-800 text-white text-[9px] py-1.5 rounded font-bold">Gestionar</button>
-                    </div>
-                `).join('');
-
-                board.innerHTML += `
-                    <div class="kanban-column p-3 flex flex-col shrink-0">
-                        <span class="text-[9px] font-bold text-slate-500 mb-3 uppercase tracking-widest">${col.title}</span>
-                        ${cardsHtml || '<p class="text-[9px] italic text-slate-400">Sin registros</p>'}
-                    </div>
-                `;
-            });
-        }
-
-        function enviarContacto() {
-            const nombre = document.getElementById('input-nombre').value || "Nuevo Padre";
-            document.getElementById('form-container').classList.add('hide-element');
-            document.getElementById('loader-container').classList.remove('hide-element');
+    <!-- View 2: Seller Panel (Kanban Style) -->
+    <div id="view2" class="hidden w-full h-screen flex-col bg-[#f0f4f8] overflow-hidden opacity-0 transition-opacity duration-700 absolute inset-0 z-20">
+        
+        <!-- Navbar -->
+        <nav class="bg-[#1e3a5f] text-white px-4 md:px-6 py-3 flex items-center justify-between shrink-0 shadow-md">
+            <div class="flex items-center gap-4">
+                <h1 class="text-base md:text-lg font-bold tracking-wide uppercase">ARA<span class="text-brand-emerald">SYNC</span> - Panel Del Vendedor</h1>
+            </div>
             
-            Toastify({ text: "📍 Sincronizando ubicación...", style: { background: "#6366f1" } }).showToast();
+            <div class="flex items-center gap-4 md:gap-6">
+                <div class="relative hidden md:block">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <i data-lucide="search" class="w-4 h-4 text-gray-400"></i>
+                    </div>
+                    <input type="text" placeholder="Buscar" class="w-64 pl-9 pr-4 py-1.5 bg-slate-700/50 border border-slate-600 rounded-lg text-sm text-white focus:ring-2 focus:ring-brand-emerald outline-none">
+                </div>
+                
+                <div class="flex items-center gap-2 text-sm">
+                    <span class="hidden md:inline font-medium">Hola, Ana García (Vendedor)</span>
+                    <i data-lucide="chevron-down" class="w-4 h-4 text-gray-300 cursor-pointer"></i>
+                    <button id="goToView3Btn" class="ml-4 bg-brand-emerald hover:bg-emerald-400 text-[#1e3a5f] text-xs font-bold px-3 py-1.5 rounded shadow-sm transition-colors">Vista Gerencial</button>
+                </div>
+            </div>
+        </nav>
 
-            setTimeout(() => {
-                // Agregar el nuevo lead al mockup
-                mockData.nuevos.unshift({ nombre: nombre, colegio: "Colegio Demo", grado: "5° Sec", marca: "Aramendi" });
-                renderKanban();
+        <!-- Subheader -->
+        <div class="bg-white px-4 md:px-6 py-2 border-b border-gray-200 flex justify-end shrink-0 shadow-sm">
+            <div class="inline-flex items-center gap-1.5 bg-[#dcfce7] text-[#166534] px-3 py-1 rounded border border-[#bbf7d0] text-xs font-bold">
+                <i data-lucide="message-circle" class="w-3.5 h-3.5 fill-[#22c55e]"></i>
+                Estado WhatsApp: Conectado <i data-lucide="check" class="w-3.5 h-3.5 text-[#166534]"></i>
+            </div>
+        </div>
 
-                document.getElementById('count-hoy').innerText = "6";
-                document.getElementById('count-semana').innerText = "26";
+        <!-- Kanban Board Area -->
+        <div class="flex-1 flex overflow-hidden relative">
+            
+            <!-- Kanban Scrolling Container -->
+            <div class="flex-1 overflow-x-auto overflow-y-hidden p-4 sm:p-6 custom-scrollbar bg-slate-50" id="kanban-scroll-area">
+                <div class="flex gap-4 h-full min-w-max items-start transition-transform duration-300 origin-center" id="kanban-wrapper">
+                    
+                    <!-- Col 1: Nuevos Leads -->
+                    <div class="w-[300px] flex flex-col h-full kanban-col" id="step-kanban-cols">
+                        <div class="bg-[#81e6d9] text-[#1d4ed8] font-bold px-4 py-3 rounded-t-xl border-b-[3px] border-[#38b2ac] text-sm text-center shadow-sm uppercase shrink-0">
+                            Nuevos Leads<br><span class="text-[10px] font-semibold text-[#1e40af]">(DESDE PROMOTORES)</span>
+                        </div>
+                        <div class="bg-[#f8fafc] flex-1 overflow-y-auto p-3 rounded-b-xl border border-gray-200 border-t-0 shadow-inner flex flex-col gap-3 custom-scrollbar" id="col-nuevos">
+                            <!-- Target for injection -->
+                            
+                            <!-- Mock Card -->
+                            <div class="kanban-card bg-white p-4 rounded-xl shadow-sm border border-gray-200 flex flex-col gap-3 hover:shadow-md transition-all cursor-pointer group" data-id="1" data-name="Juan García" data-school="Colegio San José, 5° Sec" data-phone="+1 925 256 7222" data-status="Aramendi">
+                                <div class="text-sm font-bold text-[#1e3a5f] leading-tight group-hover:text-brand-sky">
+                                    Aramendi: Juan García.<br>
+                                    <span class="font-medium text-slate-500 text-xs">Colegio San José, 5° Sec.</span>
+                                </div>
+                                <div class="flex flex-col gap-2 mt-1">
+                                    <button class="kanban-btn w-full bg-[#0c6b8c] hover:bg-[#095069] text-white text-xs font-bold py-2.5 px-3 rounded-lg shadow-sm transition-colors text-center" data-action="Iniciar Bienvenida">
+                                        Iniciar Bienvenida
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
 
-                Toastify({ text: "✅ Enviado al Panel!", style: { background: "#10b981" } }).showToast();
+                    <!-- Col 2: En Contacto Activo -->
+                    <div class="w-[300px] flex flex-col h-full kanban-col">
+                        <div class="bg-[#81e6d9] text-[#1d4ed8] font-bold px-4 py-3 rounded-t-xl border-b-[3px] border-[#38b2ac] text-sm text-center shadow-sm uppercase flex items-center justify-center shrink-0 h-[68px]">
+                            EN CONTACTO ACTIVO
+                        </div>
+                        <div class="bg-[#f8fafc] flex-1 overflow-y-auto p-3 rounded-b-xl border border-gray-200 border-t-0 shadow-inner flex flex-col gap-3 custom-scrollbar">
+                             <div class="kanban-card bg-white p-4 rounded-xl shadow-sm border border-gray-200 flex flex-col gap-3 hover:shadow-md transition-all cursor-pointer" data-id="2" data-name="Quinceañera Sofía" data-school="Evento 2027" data-phone="+1 925 888 1234" data-status="Araride">
+                                <div class="text-sm font-bold text-[#1e3a5f] leading-tight">
+                                    Araride: Quinceañera Sofía.<br>
+                                    <span class="font-medium text-slate-500 text-xs">Evento 2027</span>
+                                </div>
+                                <div class="mt-1">
+                                    <button class="kanban-btn w-full bg-[#0c6b8c] hover:bg-[#095069] text-white text-xs font-bold py-2.5 px-3 rounded-lg shadow-sm transition-colors text-center" data-action="Continuar Charla (WA)">
+                                        Continuar Charla
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
 
-                setTimeout(irAPanel, 2000);
-            }, 1500);
-        }
+                    <!-- Col 3: Cita Agendada -->
+                    <div class="w-[300px] flex flex-col h-full kanban-col">
+                        <div class="bg-[#81e6d9] text-[#1d4ed8] font-bold px-4 py-3 rounded-t-xl border-b-[3px] border-[#38b2ac] text-sm text-center shadow-sm uppercase flex items-center justify-center shrink-0 h-[68px]">
+                            CITA AGENDADA
+                        </div>
+                        <div class="bg-[#f8fafc] flex-1 overflow-y-auto p-3 rounded-b-xl border border-gray-200 border-t-0 shadow-inner flex flex-col gap-3 custom-scrollbar">
+                             <div class="kanban-card bg-white p-4 rounded-xl shadow-sm border border-gray-200 flex flex-col gap-3 hover:shadow-md transition-all cursor-pointer" data-id="3" data-name="Carlos Pérez" data-school="Padre de Referencia" data-phone="+1 925 555 6789" data-status="Reunión">
+                                <div class="text-sm font-bold text-[#1e3a5f] leading-tight">
+                                    Reunión: Carlos Pérez <span class="font-medium text-slate-500 text-xs">(Padre)</span>.<br>
+                                    <span class="font-bold text-[#0c6b8c] text-xs inline-block mt-1">Jueves 16hs.</span>
+                                </div>
+                                <div class="mt-1">
+                                    <button class="kanban-btn w-full bg-[#0c6b8c] hover:bg-[#095069] text-white text-xs font-bold py-2.5 px-3 rounded-lg shadow-sm transition-colors text-center" data-action="Confirmar Reunión">
+                                        Confirmar Reunión
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- (Extra columns truncated for brevity in replacement, but kept in actual file) -->
+                    <!-- Wait, I should probably keep them all to avoid breaking the file. -->
+                    
+                    <!-- Col 4 -->
+                    <div class="w-[300px] flex flex-col h-full kanban-col opacity-60 hover:opacity-100 transition-opacity">
+                        <div class="bg-[#81e6d9] text-[#1d4ed8] font-bold px-4 py-3 rounded-t-xl border-b-[3px] border-[#38b2ac] text-sm text-center shadow-sm uppercase flex items-center justify-center shrink-0 h-[68px]">
+                            EN CIERRE / CONTRATO
+                        </div>
+                        <div class="bg-[#f8fafc] flex-1 overflow-y-auto p-3 rounded-b-xl border border-gray-200 border-t-0 shadow-inner flex flex-col gap-3 custom-scrollbar">
+                            <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200 flex flex-col gap-3">
+                                <div class="text-sm font-bold text-[#1e3a5f] leading-tight">
+                                    Reunión: Davis Pérez.<br>
+                                    <span class="font-medium text-slate-500 text-xs">Evento 2027, Jueves</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-        function irAPanel() {
-            const container = document.getElementById('app-container');
-            document.getElementById('promotor-view').classList.add('hide-element');
-            document.getElementById('vendedor-view').classList.remove('hide-element');
+            <!-- Details Sidebar (Fixed/Sticky Right) -->
+            <div id="details-sidebar" class="w-[340px] bg-white border-l border-gray-200 shadow-2xl flex flex-col transition-all duration-500 ease-in-out z-20 shrink-0">
+                <!-- Toggle Button -->
+                <button id="toggleSidebarBtn" class="absolute -left-8 top-1/2 -translate-y-1/2 bg-white border border-gray-200 border-r-0 p-2 rounded-l-xl shadow-md hover:bg-slate-50 transition-colors z-10">
+                    <i data-lucide="chevron-right" id="sidebarIcon" class="w-5 h-5 text-slate-400 rotate-180 transition-transform"></i>
+                </button>
 
-            // Si es mobile, aplicamos el giro forzado
-            if (window.innerWidth < 1024) {
-                container.classList.add('panel-mode-mobile');
-                Toastify({ text: "📱 Gira tu pantalla para ver el Panel", duration: 5000 }).showToast();
-            }
+                <div class="bg-[#81e6d9] text-[#1d4ed8] font-bold px-4 py-3 border-b-[3px] border-[#38b2ac] text-sm text-center uppercase flex items-center justify-center shrink-0 h-[68px]" id="step-details-header">
+                    DETALLES Y ACCIONES
+                </div>
+                
+                <!-- Sidebar Content -->
+                <div class="flex-1 overflow-y-auto p-5 flex flex-col gap-4 custom-scrollbar" id="sidebar-content">
+                    
+                    <div class="border border-gray-200 rounded-lg p-3 bg-slate-50 shadow-sm">
+                        <h3 id="detail-name" class="font-bold text-[#1e3a5f] text-sm mb-1 leading-tight tracking-tight">Selecciona un Lead</h3>
+                        <p id="detail-school" class="text-xs text-slate-500 font-medium">Click en una tarjeta para ver detalles</p>
+                    </div>
 
-            renderKanban();
-        }
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i data-lucide="phone" class="w-4 h-4 text-gray-400"></i>
+                        </div>
+                        <input type="text" id="detail-phone" value="-" disabled class="w-full pl-9 pr-3 py-2.5 border border-gray-200 rounded-lg bg-gray-50 text-sm font-medium text-slate-700">
+                    </div>
 
-        // Inicializar
-        renderKanban();
-    </script>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i data-lucide="building-2" class="w-4 h-4 text-gray-400"></i>
+                        </div>
+                        <input type="text" id="detail-info" value="-" disabled class="w-full pl-9 pr-3 py-2.5 border border-gray-200 rounded-lg bg-gray-50 text-sm font-medium text-slate-700">
+                    </div>
+                    
+                    <div class="relative">
+                        <input type="text" value="Cargando..." id="detail-status" disabled class="w-full px-3 py-2.5 border border-gray-200 rounded-lg bg-gray-50 text-sm font-bold text-[#1e3a5f]">
+                        <span class="absolute -top-2 left-2 bg-white px-1 text-[10px] font-bold text-slate-500">Estado actual</span>
+                    </div>
+
+                    <div class="border border-gray-200 rounded-lg relative mt-2 flex-1 flex flex-col min-h-[140px]">
+                        <span class="absolute -top-2 left-2 bg-white px-1 text-[10px] font-bold text-slate-500">Notas privadas:</span>
+                        <textarea class="w-full p-3 pt-4 outline-none text-sm text-slate-700 bg-[#fefce8] rounded-t-lg flex-1 resize-none border-0 leading-relaxed font-medium" placeholder="Escribe notas aquí..."></textarea>
+                        <div class="bg-[#fefce8] p-2 rounded-b-lg border-t border-yellow-100 flex justify-end">
+                            <button class="kanban-btn text-xs bg-yellow-200 hover:bg-yellow-300 text-yellow-800 px-3 py-1.5 rounded shadow-sm font-bold transition-colors" data-action="Guardar Notas">Guardar Notas</button>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-2 mt-4" id="step-actions">
+                        <button class="kanban-btn bg-[#0c6b8c] hover:bg-[#095069] text-white text-[11px] font-bold py-2.5 px-1 rounded-lg shadow-sm transition-colors text-center" data-action="Enviar Bienvenida">
+                            Bienvenida
+                        </button>
+                        <button class="kanban-btn bg-[#0c6b8c] hover:bg-[#095069] text-white text-[11px] font-bold py-2.5 px-1 rounded-lg shadow-sm transition-colors text-center" data-action="Enviar Catálogo">
+                            Catálogo
+                        </button>
+                        <button class="kanban-btn bg-[#0c6b8c] hover:bg-[#095069] text-white text-[11px] font-bold py-2.5 px-1 rounded-lg shadow-sm transition-colors text-center" data-action="Continuar WhatsApp">
+                            WhatsApp
+                        </button>
+                        <button class="kanban-btn bg-brand-emerald hover:bg-emerald-600 text-[#1e3a5f] text-[11px] font-bold py-2.5 px-1 rounded-lg shadow-sm transition-colors text-center" data-action="Cerrar Venta">
+                            Cerrar
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Tutorial System -->
+            <div id="tutorial-backdrop" class="absolute inset-0 z-[100] hidden pointer-events-auto bg-transparent"></div>
+
+            <div id="tutorial-spotlight" class="absolute z-[105] pointer-events-none transition-all duration-300 rounded-xl hidden" style="box-shadow: 0 0 0 9999px rgba(15, 23, 42, 0.8), 0 0 0 3px rgba(16, 185, 129, 1);"></div>
+
+            <!-- Tooltip -->
+            <div id="tutorial-tooltip" class="absolute z-[110] bg-white p-6 rounded-2xl shadow-2xl max-w-sm transition-all duration-300 transform scale-95 opacity-0 border-2 border-brand-emerald hidden flex-col">
+                <div class="flex justify-between items-start mb-3">
+                    <span id="tutorial-step-count" class="text-xs font-bold text-brand-emerald bg-emerald-50 px-2 py-0.5 rounded">PASO 1 / 4</span>
+                    <button id="skipTutorial" class="text-slate-400 hover:text-slate-600 font-bold text-xs uppercase">Saltar</button>
+                </div>
+                <h3 id="tutorial-title" class="font-bold text-[#1e3a5f] text-lg mb-2">¡Bienvenido al Panel!</h3>
+                <p id="tutorial-text" class="text-slate-600 text-sm leading-relaxed mb-6">Este es tu centro de gestión. Aquí verás todos los leads sincronizados en tiempo real.</p>
+                <div class="flex justify-end gap-3">
+                    <button id="prevTutorial" class="hidden px-4 py-2 text-slate-500 font-bold text-sm hover:bg-slate-50 rounded-lg transition-colors">Atrás</button>
+                    <button id="nextTutorial" class="bg-brand-emerald hover:bg-emerald-400 text-[#1e3a5f] font-bold px-6 py-2 rounded-xl shadow-lg transition-all">Siguiente</button>
+                </div>
+            </div>
+
+            <!-- Mobile Rotate Overlay -->
+            <div id="rotateOverlay" class="fixed inset-0 bg-[#1e3a5f]/95 z-50 flex-col items-center justify-center text-white p-6 text-center backdrop-blur-sm transition-opacity duration-300 lg:hidden hidden">
+                <i data-lucide="rotate-cw" class="w-16 h-16 animate-spin mb-6 text-brand-emerald"></i>
+                <h2 class="text-2xl font-bold mb-3 tracking-wide">Gira tu dispositivo</h2>
+                <p class="text-slate-300 max-w-sm leading-relaxed font-medium">
+                    El panel de vendedor está diseñado para usarse en modo horizontal para una mejor experiencia.
+                </p>
+                <button id="dismissRotateOverlay" class="mt-8 bg-brand-emerald text-[#1e3a5f] font-bold px-6 py-3 rounded-full shadow-lg active:scale-95 transition-transform">Continuar igual</button>
+            </div>
+        </div>
+    </div>
+    </div>
+
+    <!-- View 3: Manager Panel -->
+    <div id="view3" class="hidden w-full h-screen flex-col bg-[#f0f4f8] overflow-hidden opacity-0 transition-opacity duration-700 absolute inset-0 z-30">
+        
+        <!-- Navbar -->
+        <nav class="bg-[#1e3a5f] text-white px-4 md:px-6 py-3 flex items-center justify-between shrink-0 shadow-md">
+            <div class="flex items-center gap-4">
+                <h1 class="text-base md:text-lg font-bold tracking-wide uppercase">ARA<span class="text-brand-emerald">SYNC</span> - Panel Del Gerente</h1>
+            </div>
+            
+            <div class="flex items-center gap-4 md:gap-6">
+                <div class="relative hidden md:block">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <i data-lucide="search" class="w-4 h-4 text-gray-400"></i>
+                    </div>
+                    <input type="text" placeholder="Buscar" class="w-64 pl-9 pr-4 py-1.5 bg-slate-700/50 border border-slate-600 rounded-lg text-sm text-white focus:ring-2 focus:ring-brand-emerald outline-none">
+                </div>
+                
+                <div class="flex items-center gap-2 text-sm">
+                    <span class="hidden md:inline font-medium">Hola, Luis Martínez (Gerente)</span>
+                    <i data-lucide="chevron-down" class="w-4 h-4 text-gray-300 cursor-pointer"></i>
+                    <button id="backToView2Btn" class="ml-4 bg-slate-600 hover:bg-slate-500 text-white text-xs font-bold px-3 py-1.5 rounded shadow-sm transition-colors">Volver</button>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <div class="flex flex-1 overflow-hidden">
+            <!-- Sidebar -->
+            <div class="w-48 bg-[#e9f0f2] border-r border-gray-200 flex flex-col shrink-0">
+                <div class="bg-[#d2e0e3] px-4 py-2 font-bold text-[#1e3a5f] text-sm tracking-wide border-b border-gray-300 shadow-sm">
+                    FILTROS:
+                </div>
+                <div class="p-4 flex flex-col gap-6 text-[#1e3a5f]">
+                    <div class="flex gap-3 items-start">
+                        <i data-lucide="filter" class="w-5 h-5 text-gray-500 shrink-0 mt-0.5"></i>
+                        <div class="leading-tight">
+                            <span class="text-sm font-semibold">Producto:</span><br>
+                            <span class="text-base font-bold">Todos</span><br>
+                            <span class="text-[10px] text-gray-500 font-medium leading-none">(Egresados/15 Años)</span>
+                        </div>
+                    </div>
+                    <div class="flex gap-3 items-start">
+                        <i data-lucide="calendar" class="w-5 h-5 text-gray-500 shrink-0 mt-0.5"></i>
+                        <div class="leading-tight">
+                            <span class="text-sm font-semibold">Rango de<br>Fecha:</span><br>
+                            <span class="text-base font-bold">Este Mes</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dashboard Grid -->
+            <div class="flex-1 overflow-y-auto p-4 md:p-6 bg-[#f8fafc] custom-scrollbar grid grid-cols-1 xl:grid-cols-2 gap-4 md:gap-6 auto-rows-max">
+                
+                <!-- Card 1 -->
+                <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden col-span-1 xl:col-span-1 flex flex-col">
+                    <div class="bg-[#81e6d9] text-[#1d4ed8] font-bold px-4 py-2 border-b-[3px] border-[#38b2ac] text-sm text-center uppercase tracking-wide">
+                        RESUMEN COMPARATIVO DEL EMBUDO (LEADS ACTIVOS)
+                    </div>
+                    <div class="p-4 flex-1">
+                        <table class="w-full text-center text-sm table-fixed border-separate border-spacing-y-2">
+                            <thead>
+                                <tr class="text-[#1e3a5f] font-bold">
+                                    <th class="w-1/5 text-left bg-white"></th>
+                                    <th>Nuevo</th>
+                                    <th>Contactado</th>
+                                    <th>Cita Agendada</th>
+                                    <th>En Cierre</th>
+                                </tr>
+                            </thead>
+                            <tbody class="text-white font-bold h-[92px]">
+                                <tr>
+                                    <td class="text-[#1e3a5f] text-xs font-bold text-left leading-tight pr-2">Aramendi<br><span class="font-normal">(Egresados)</span></td>
+                                    <td><div class="bg-[#38b2ac] py-2">15</div></td>
+                                    <td><div class="bg-[#38b2ac] py-2 ml-1">10</div></td>
+                                    <td><div class="bg-[#38b2ac] py-2 ml-1">5</div></td>
+                                    <td><div class="bg-[#38b2ac] py-2 ml-1">3</div></td>
+                                </tr>
+                                <tr>
+                                    <td class="text-[#1e3a5f] text-xs font-bold text-left leading-tight pr-2">Araride<br><span class="font-normal">(15 Años)</span></td>
+                                    <td><div class="bg-[#1e3a5f] py-2">10</div></td>
+                                    <td><div class="bg-[#1e3a5f] py-2 ml-1">8</div></td>
+                                    <td><div class="bg-[#1e3a5f] py-2 ml-1">4</div></td>
+                                    <td><div class="bg-[#1e3a5f] py-2 ml-1">2</div></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Card 2 -->
+                <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden col-span-1 flex flex-col">
+                    <div class="bg-[#81e6d9] text-[#1d4ed8] font-bold px-4 py-2 border-b-[3px] border-[#38b2ac] text-sm text-center uppercase tracking-wide">
+                        CONTRATOS FIRMADOS Y METAS
+                    </div>
+                    <div class="p-4 md:p-6 flex-1 flex justify-around items-center">
+                        <div class="flex flex-col items-center">
+                            <h3 class="font-bold text-[#1e3a5f] text-xs uppercase mb-2">ARAMENDI (EGRESADOS)</h3>
+                            <div class="flex items-baseline gap-2 text-[#1e3a5f]">
+                                <span class="text-4xl font-black">30</span>
+                                <span class="text-lg font-bold">de 50</span>
+                            </div>
+                            <span class="text-sm font-semibold text-slate-700 mb-2">Mensual (60%)</span>
+                            <div class="w-full bg-slate-200 h-3 rounded-full overflow-hidden">
+                                <div class="bg-[#22c55e] w-[60%] h-full rounded-full"></div>
+                            </div>
+                        </div>
+                        <div class="w-px h-full bg-gray-200 hidden sm:block"></div>
+                        <div class="flex flex-col items-center">
+                            <h3 class="font-bold text-[#1e3a5f] text-xs uppercase mb-2">ARARIDE (15 AÑOS)</h3>
+                            <div class="flex items-baseline gap-2 text-[#1e3a5f]">
+                                <span class="text-4xl font-black">20</span>
+                                <span class="text-lg font-bold">de 35</span>
+                            </div>
+                            <span class="text-sm font-semibold text-slate-700 mb-2">Mensual (57%)</span>
+                            <div class="w-full bg-slate-200 h-3 rounded-full overflow-hidden">
+                                <div class="bg-[#22c55e] w-[57%] h-full rounded-full"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card 3 -->
+                <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden col-span-1">
+                    <div class="bg-[#81e6d9] text-[#1d4ed8] font-bold px-4 py-2 border-b-[3px] border-[#38b2ac] text-sm text-center uppercase tracking-wide">
+                        RANKING DE PROMOTORES - EFECTIVIDAD
+                    </div>
+                    <div class="pt-0 p-4">
+                        <table class="w-full text-sm text-[#1e3a5f]">
+                            <thead>
+                                <tr class="font-bold border-b border-gray-200 text-left">
+                                    <th class="py-2">Promotor</th>
+                                    <th class="py-2 text-center">Leads Totales</th>
+                                    <th class="py-2 text-center">Citas Agendadas</th>
+                                    <th class="py-2 text-center">% Efectividad</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr class="border-b border-gray-100 last:border-0 hover:bg-slate-50 transition-colors">
+                                    <td class="py-2 font-medium">Carlos R.</td>
+                                    <td class="py-2 text-center">25</td>
+                                    <td class="py-2 text-center">5</td>
+                                    <td class="py-2 text-center">20%</td>
+                                </tr>
+                                <tr class="border-b border-gray-100 last:border-0 hover:bg-slate-50 transition-colors">
+                                    <td class="py-2 font-medium">Ana S.</td>
+                                    <td class="py-2 text-center">20</td>
+                                    <td class="py-2 text-center">5</td>
+                                    <td class="py-2 text-center">20%</td>
+                                </tr>
+                                <tr class="border-b border-gray-100 last:border-0 hover:bg-slate-50 transition-colors">
+                                    <td class="py-2 font-medium">Pedro M.</td>
+                                    <td class="py-2 text-center">10</td>
+                                    <td class="py-2 text-center">2</td>
+                                    <td class="py-2 text-center">10%</td>
+                                </tr>
+                                <tr class="last:border-0 hover:bg-slate-50 transition-colors">
+                                    <td class="py-2 font-medium">Carlos J.</td>
+                                    <td class="py-2 text-center">8</td>
+                                    <td class="py-2 text-center">4</td>
+                                    <td class="py-2 text-center">10%</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Card 4 -->
+                <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden col-span-1">
+                    <div class="bg-[#81e6d9] text-[#1d4ed8] font-bold px-4 py-2 border-b-[3px] border-[#38b2ac] text-sm text-center uppercase tracking-wide">
+                        RENDIMIENTO DE VENDEDORES (CIERRE)
+                    </div>
+                    <div class="pt-0 p-4">
+                        <table class="w-full text-sm text-[#1e3a5f]">
+                            <thead>
+                                <tr class="font-bold border-b border-gray-200 text-left">
+                                    <th class="py-2">Vendedor</th>
+                                    <th class="py-2 text-center">Asignados</th>
+                                    <th class="py-2 text-center">Contratos</th>
+                                    <th class="py-2 text-center">% Tasa Cierre</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr class="border-b border-gray-100 last:border-0 hover:bg-slate-50 transition-colors">
+                                    <td class="py-2 font-medium">Ana G.</td>
+                                    <td class="py-2 text-center">12</td>
+                                    <td class="py-2 text-center">4</td>
+                                    <td class="py-2 text-center">33%</td>
+                                </tr>
+                                <tr class="border-b border-gray-100 last:border-0 hover:bg-slate-50 transition-colors">
+                                    <td class="py-2 font-medium">Luis P.</td>
+                                    <td class="py-2 text-center">12</td>
+                                    <td class="py-2 text-center">4</td>
+                                    <td class="py-2 text-center">33%</td>
+                                </tr>
+                                <tr class="last:border-0 hover:bg-slate-50 transition-colors">
+                                    <td class="py-2 font-medium">Marta S.</td>
+                                    <td class="py-2 text-center">9</td>
+                                    <td class="py-2 text-center">3</td>
+                                    <td class="py-2 text-center">11%</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Card 5 -->
+                <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden col-span-1">
+                    <div class="bg-[#81e6d9] text-[#1d4ed8] font-bold px-4 py-2 border-b-[3px] border-[#38b2ac] text-sm text-center uppercase tracking-wide">
+                        TOP 5 COLEGIOS POR LEADS (DISTINTOS PRODUCTOS)
+                    </div>
+                    <div class="pt-0 p-4">
+                        <table class="w-full text-sm text-[#1e3a5f]">
+                            <thead>
+                                <tr class="font-bold border-b border-gray-200 text-left">
+                                    <th class="py-2">Colegio</th>
+                                    <th class="py-2 text-center">Aramendi (Egresados)</th>
+                                    <th class="py-2 text-center">Araride (15 Años)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr class="border-b border-gray-100 last:border-0 hover:bg-slate-50 transition-colors">
+                                    <td class="py-2 font-medium">Col. San José</td>
+                                    <td class="py-2 text-center">25</td>
+                                    <td class="py-2 text-center">5</td>
+                                </tr>
+                                <tr class="border-b border-gray-100 last:border-0 hover:bg-slate-50 transition-colors">
+                                    <td class="py-2 font-medium">Col. San Martín</td>
+                                    <td class="py-2 text-center">10</td>
+                                    <td class="py-2 text-center">8</td>
+                                </tr>
+                                <tr class="border-b border-gray-100 last:border-0 hover:bg-slate-50 transition-colors">
+                                    <td class="py-2 font-medium">Esc. Nacional</td>
+                                    <td class="py-2 text-center">23</td>
+                                    <td class="py-2 text-center">4</td>
+                                </tr>
+                                <tr class="last:border-0 hover:bg-slate-50 transition-colors">
+                                    <td class="py-2 font-medium">Esc. Normal</td>
+                                    <td class="py-2 text-center">18</td>
+                                    <td class="py-2 text-center">9</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Card 6 -->
+                <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden col-span-1 flex flex-col h-56">
+                    <div class="bg-[#81e6d9] text-[#1d4ed8] font-bold px-4 py-2 border-b-[3px] border-[#38b2ac] text-sm text-center uppercase tracking-wide shrink-0">
+                        REGISTRO DE ACTIVIDAD DEL SISTEMA (LOGS)
+                    </div>
+                    <div class="p-4 flex-1 overflow-y-auto custom-scrollbar">
+                        <ul class="text-sm font-medium text-slate-600 space-y-2.5">
+                            <li class="flex border-l-[3px] border-gray-300 pl-2">
+                                <span class="text-gray-400 w-14 shrink-0 font-mono text-xs mt-0.5">14:30 |</span> 
+                                <span>Vendedor <strong>Ana G.</strong> agendó cita (C. Pérez)</span>
+                            </li>
+                            <li class="flex border-l-[3px] border-[#38b2ac] pl-2">
+                                <span class="text-gray-400 w-14 shrink-0 font-mono text-xs mt-0.5">14:15 |</span> 
+                                <span><strong>Conexión Baileys</strong> Re-establecida</span>
+                            </li>
+                            <li class="flex border-l-[3px] border-rose-400 pl-2">
+                                <span class="text-gray-400 w-14 shrink-0 font-mono text-xs mt-0.5">13:50 |</span> 
+                                <span class="text-rose-600"><strong>Error 401</strong> Sesión Cerrada (Tenant X)</span>
+                            </li>
+                            <li class="flex border-l-[3px] border-rose-400 pl-2">
+                                <span class="text-gray-400 w-14 shrink-0 font-mono text-xs mt-0.5">13:20 |</span> 
+                                <span class="text-rose-600"><strong>Error 401</strong> Sesión Cerrada (Tenant X)</span>
+                            </li>
+                            <li class="flex border-l-[3px] border-gray-300 pl-2">
+                                <span class="text-gray-400 w-14 shrink-0 font-mono text-xs mt-0.5">12:10 |</span> 
+                                <span>Promotor <strong>Carlos R.</strong> hizo check-in en "Escuela Nacional".</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+    <script src="app.js"></script>
 </body>
 </html>
